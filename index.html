@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Divine's Horogium — The Eternal Time Prison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-void: #030408;
+    --card-glass: rgba(10, 14, 26, 0.45);
+    --card-glass-sub: rgba(16, 22, 38, 0.35);
+    --border-chrono: rgba(255, 215, 0, 0.35);
+    --border-accent: rgba(0, 242, 254, 0.3);
+    --text-primary: #f0f5ff;
+    --text-muted: #8e9bb0;
+    --gold-tempo: #ffd700;
+    --gold-glow: rgba(255, 215, 0, 0.5);
+    --cyan-temporal: #00f2fe;
+    --cyan-glow: rgba(0, 242, 254, 0.5);
+    --purple-nemesis: #a855f7;
+    --crimson-pegasus: #ff0055;
+    --ok-emerald: #00ff88;
+    --warn-amber: #ffaa00;
+    --err-crimson: #ff1744;
+    --chrono-grad: linear-gradient(135deg, #ffd700 0%, #00f2fe 50%, #8a2be2 100%);
+    --chrono-grad-btn: linear-gradient(135deg, #00c6ff 0%, #0072ff 50%, #7b2cbf 100%);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%; margin: 0; padding: 0;
+    background: var(--bg-void); color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden; display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #battleCanvas {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  .anime-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(3, 4, 8, 0.75) 100%);
+  }
+
+  .multi-token-bar {
+    position: relative; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 6px 12px; background: rgba(5, 7, 14, 0.55);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-chrono);
+  }
+
+  .branding-cluster {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 10px; border-radius: 999px;
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    flex-shrink: 0;
+  }
+  .brand-sigil {
+    width: 20px; height: 20px;
+    filter: drop-shadow(0 0 4px var(--gold-tempo));
+  }
+  .brand-title {
+    font-family: 'Cinzel', serif; font-weight: 900; font-size: 13px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--gold-tempo); text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  }
+
+  .token-bar-left {
+    display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  }
+  .token-bar-left::-webkit-scrollbar { display: none; }
+
+  .token-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(16, 20, 34, 0.6); color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.15); cursor: pointer;
+    font-size: 10px; font-weight: 700; font-family: 'Orbitron', sans-serif;
+    white-space: nowrap; backdrop-filter: blur(6px);
+  }
+  .token-pill:hover { color: #fff; border-color: var(--cyan-temporal); }
+  .token-pill.active {
+    color: #040508; font-weight: 900; background: var(--chrono-grad);
+    border-color: transparent; box-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
+  }
+  .token-pill .close-pill {
+    width: 14px; height: 14px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 10px;
+  }
+  .token-pill .close-pill:hover { background: rgba(0,0,0,0.6); color: #ff1744; }
+
+  .add-token-tab {
+    cursor: pointer; border: 1px dashed var(--cyan-temporal); background: rgba(0, 242, 254, 0.1);
+    color: var(--cyan-temporal); border-radius: 999px; padding: 4px 10px; font-weight: 700;
+    font-size: 10px; font-family: 'Orbitron', sans-serif; white-space: nowrap;
+  }
+
+  .system-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .sound-pill, .wakelock-pill {
+    display: flex; align-items: center; gap: 5px; padding: 4px 8px;
+    border-radius: 6px; font-size: 9px; font-weight: 700; cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    border: 1px solid var(--border-chrono); background: rgba(12, 16, 28, 0.55);
+    color: var(--text-muted); backdrop-filter: blur(6px);
+  }
+  .sound-pill.active { color: var(--gold-tempo); border-color: var(--gold-tempo); }
+  .wakelock-pill.active { border-color: var(--ok-emerald); color: var(--ok-emerald); }
+  .wakelock-dot { width: 5px; height: 5px; border-radius: 50%; background: #444; }
+  .wakelock-pill.active .wakelock-dot { background: var(--ok-emerald); }
+
+  .multi-viewport {
+    position: relative; z-index: 10;
+    flex: 1; width: 100%; overflow-y: auto; display: flex;
+    justify-content: center; align-items: flex-start; padding: 12px 10px;
+    scrollbar-width: thin; scrollbar-color: var(--cyan-temporal) rgba(10,14,24,0.3);
+  }
+  .multi-viewport::-webkit-scrollbar { width: 4px; }
+  .multi-viewport::-webkit-scrollbar-thumb { background: var(--cyan-temporal); border-radius: 3px; }
+
+  .token-workspace { display: none; width: 100%; max-width: 980px; }
+  .token-workspace.active { display: block; }
+
+  .shell {
+    position: relative; width: 100%; border-radius: 12px; padding: 12px;
+    background: var(--card-glass);
+    border: 1px solid rgba(255, 215, 0, 0.28);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    margin-bottom: 24px;
+  }
+
+  .tabs {
+    display: flex; gap: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px; margin-bottom: 10px; flex-wrap: wrap; overflow-x: auto;
+  }
+  .tab {
+    user-select: none; cursor: pointer; font-size: 9.5px; font-weight: 700;
+    font-family: 'Orbitron', sans-serif; padding: 4px 8px; border-radius: 5px;
+    color: var(--text-muted); background: rgba(8, 12, 22, 0.45);
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .tab:hover { color: var(--cyan-temporal); border-color: rgba(0, 242, 254, 0.3); }
+  .tab.active {
+    color: #040508; font-weight: 900; background: var(--chrono-grad);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+  }
+
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card-glass-sub);
+    border: 1px solid rgba(0, 242, 254, 0.2); border-radius: 8px; padding: 6px 10px;
+    flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+  }
+  .title-group { display: flex; align-items: baseline; gap: 8px; }
+  .title {
+    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 900;
+    letter-spacing: 1px; color: #fff;
+  }
+  .title-meta { font-size: 8.5px; color: var(--cyan-temporal); font-family: 'Orbitron', sans-serif; }
+
+  .target-badge {
+    font-size: 9px; font-weight: 700; font-family: 'Orbitron', sans-serif;
+    padding: 3px 6px; border-radius: 5px;
+    background: rgba(255, 170, 0, 0.15); border: 1px solid var(--warn-amber);
+    color: var(--warn-amber);
+  }
+  .target-badge.locked {
+    background: rgba(0, 255, 136, 0.15); border-color: var(--ok-emerald);
+    color: var(--ok-emerald);
+  }
+
+  .status {
+    display: inline-flex; gap: 5px; align-items: center; font-size: 9px;
+    font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--text-primary);
+    padding: 3px 6px; background: rgba(0,0,0,0.4); border-radius: 5px; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: #555; }
+  .status.active .dot { background: var(--cyan-temporal); box-shadow: 0 0 6px var(--cyan-temporal); }
+
+  .block {
+    padding: 10px; background: rgba(8, 12, 22, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px; margin-top: 8px; position: relative;
+    backdrop-filter: blur(8px);
+  }
+
+  .label {
+    font-size: 9px; letter-spacing: 0.8px; color: var(--cyan-temporal);
+    margin-bottom: 5px; text-transform: uppercase; font-weight: 700; font-family: 'Orbitron', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .step-tag {
+    background: rgba(0, 242, 254, 0.15); border: 1px solid var(--cyan-temporal);
+    color: var(--cyan-temporal); padding: 1px 4px; border-radius: 3px; font-size: 8px;
+  }
+
+  input[type="text"], input[type="password"], textarea, select {
+    width: 100%; padding: 7px 9px; border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(5, 7, 14, 0.6); color: var(--text-primary);
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    backdrop-filter: blur(4px);
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--cyan-temporal); outline: none;
+    box-shadow: 0 0 8px rgba(0, 242, 254, 0.35);
+  }
+  textarea { min-height: 70px; resize: vertical; }
+
+  .btn {
+    cursor: pointer; border: none; border-radius: 5px; padding: 7px 10px;
+    font-weight: 700; font-family: 'Orbitron', sans-serif; font-size: 10px;
+    color: #fff; background: var(--chrono-grad-btn); text-transform: uppercase;
+  }
+  .btn:hover { filter: brightness(1.2); }
+  .btn:disabled { background: rgba(30, 35, 50, 0.5); color: rgba(255,255,255,0.25); cursor: not-allowed; }
+  .btn.secondary {
+    background: rgba(18, 24, 40, 0.55); border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .btn.secondary:hover { border-color: var(--cyan-temporal); }
+
+  .row { display: flex; gap: 6px; margin-top: 6px; }
+  .row > * { flex: 1; }
+
+  .counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .counter {
+    background: rgba(6, 9, 16, 0.6); border: 1px solid rgba(0, 242, 254, 0.2);
+    border-radius: 6px; padding: 6px; text-align: center;
+  }
+  .counter .k { font-size: 8px; color: var(--cyan-temporal); font-family: 'Orbitron', sans-serif; }
+  .counter .v { font-size: 16px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: #fff; }
+
+  .log {
+    height: 150px; overflow-y: auto; border: 1px solid rgba(0, 242, 254, 0.2);
+    border-radius: 6px; padding: 8px; background: rgba(3, 5, 10, 0.65);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.4;
+    backdrop-filter: blur(6px);
+  }
+  .log::-webkit-scrollbar { width: 4px; }
+  .log::-webkit-scrollbar-thumb { background: var(--cyan-temporal); }
+
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  .range { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+  input[type="range"] { accent-color: var(--cyan-temporal); flex: 1; cursor: pointer; }
+
+  .toggle {
+    padding: 6px 8px; border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px; background: rgba(12, 16, 28, 0.55);
+    color: var(--text-muted); cursor: pointer; text-align: center;
+    font-weight: 700; font-size: 9.5px; font-family: 'Orbitron', sans-serif;
+  }
+  .toggle.active { background: var(--chrono-grad-btn); color: #fff; border-color: transparent; }
+
+  .hint { font-size: 9.5px; color: var(--text-muted); line-height: 1.3; }
+  label.hint { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  input[type="checkbox"] { accent-color: var(--cyan-temporal); width: 13px; height: 13px; }
+
+  .file-input { display: none; }
+  .file-label {
+    display: block; padding: 7px; background: rgba(8, 12, 22, 0.55);
+    border: 1px dashed rgba(0, 242, 254, 0.4); border-radius: 6px;
+    text-align: center; cursor: pointer; font-size: 10px; font-family: 'Orbitron', sans-serif;
+    color: var(--cyan-temporal);
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+  #keepAliveTarget {
+    position: fixed; bottom: 2px; right: 2px; width: 4px; height: 4px;
+    opacity: 0.01; pointer-events: auto; z-index: 999999;
+  }
+</style>
+</head>
+<body>
+
+  <canvas id="battleCanvas"></canvas>
+  <div class="anime-overlay"></div>
+
+  <header class="multi-token-bar">
+    <div class="token-bar-left">
+      <div class="branding-cluster" title="Twisted Tempo - Basalt Horogium Core">
+        <svg class="brand-sigil" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" stroke="#ffd700" stroke-width="4" fill="none" stroke-dasharray="10 6"/>
+          <circle cx="50" cy="50" r="32" stroke="#00f2fe" stroke-width="3" fill="none"/>
+          <circle cx="50" cy="50" r="6" fill="#ffd700"/>
+        </svg>
+        <div class="brand-title">Divine's Horogium</div>
+      </div>
+      <div id="tokenTabsList" style="display:flex; gap:5px; align-items:center;"></div>
+      <button class="add-token-tab" id="addNewTokenBtn">+ Vessel</button>
+    </div>
+
+    <div class="system-controls">
+      <div class="sound-pill active" id="soundToggleBtn"><span>🔊 SYNTH</span></div>
+      <div class="wakelock-pill active" id="wakeLockBtn">
+        <span class="wakelock-dot"></span>
+        <span id="wakeLockText">WAKE: ON</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="keepAliveTarget"></div>
+  <main class="multi-viewport" id="multiViewport"></main>
+
+  <template id="baseUiTemplate">
+    <div class="shell">
+      <nav class="tabs">
+        <div class="tab active" data-pane="accounts">1. Accounts</div>
+        <div class="tab" data-pane="channel">2. Destination GC</div>
+        <div class="tab" data-pane="normal">3. Normal Burst</div>
+        <div class="tab" data-pane="adders">Adders</div>
+        <div class="tab" data-pane="pretyper">Pre-Typer</div>
+        <div class="tab" data-pane="ladder">Time Ladder</div>
+        <div class="tab" data-pane="autobeefer">AutoBeefer</div>
+        <div class="tab" data-pane="titlechanger">Title Shift</div>
+        <div class="tab" data-pane="additional">Additional Flow</div>
+        <div class="tab" data-pane="keybind">Keybinds</div>
+        <div class="tab" data-pane="afk">Anti-AFK</div>
+        <div class="tab" data-pane="autoreply">Auto-Reply</div>
+        <div class="tab" data-pane="options">Config</div>
+      </nav>
+
+      <div class="header">
+        <div class="title-group">
+          <div class="title">VESSEL CORE</div>
+          <div class="title-meta">INDEPENDENT ENGINE INSTANCE</div>
+        </div>
+        <div class="header-right" style="display:flex; gap:6px; align-items:center;">
+          <div class="target-badge targetStatusBadge">🌐 Scanning (Type 'xTarget')</div>
+          <div class="status"><span class="dot"></span><span class="pill">Inactive</span></div>
+        </div>
+      </div>
+      
+      <!-- 1. Accounts -->
+      <section class="pane active" data-pane="accounts">
+          <div class="block" style="margin-top:0;">
+              <div class="label"><span class="step-tag">Step 1</span> IDENTIFY MATRIX & CREDENTIALS</div>
+              <div class="hint" style="margin-bottom:6px;">Add your Discord User Token to wake this vessel. Runs in isolated memory.</div>
+              <select class="accountSelector" style="margin-bottom: 6px;"></select>
+              <div class="row">
+                  <input type="text" class="accountAlias" placeholder="Vessel Name / Alias (e.g. Basalt Alpha)">
+                  <input type="password" class="newAccountToken" placeholder="Discord User Token">
+              </div>
+              <div class="row">
+                  <button class="btn addAccount">Bond Account</button>
+                  <button class="btn secondary removeAccount">Purge</button>
+              </div>
+          </div>
+      </section>
+      
+      <!-- 2. Destination GC -->
+      <section class="pane" data-pane="channel">
+          <div class="block" style="margin-top:0;">
+              <div class="label" style="color:var(--gold-tempo);"><span class="step-tag">Filter</span> VESSEL OVERSEER ID (OPTIONAL)</div>
+              <input type="text" class="ownerUserId" placeholder="Leave empty for anyone, or enter your Discord ID to restrict 'xTarget'" style="margin-bottom:6px;">
+              
+              <div class="label" style="color:var(--cyan-temporal);"><span class="step-tag">Step 2</span> TARGET GC SINGULARITY</div>
+              <div class="hint" style="margin-bottom:5px;">Type <code>xTarget</code> inside Discord to auto-lock, paste ID manually, or click any channel below:</div>
+              <div class="row" style="margin-top:0;">
+                  <input type="text" class="globalChannelId" placeholder="Scanning all visible Discord chats...">
+                  <button class="btn secondary unlockTargetBtn" style="flex:0 0 auto;">Unlock</button>
+              </div>
+              <label class="hint" style="margin-top:5px;">
+                <input type="checkbox" class="autoDeleteXTarget" checked> Auto-delete 'xTarget' command trigger
+              </label>
+              <input type="text" class="globalPingUsers" placeholder="Mention Users (comma-separated IDs)" style="margin-top:6px;">
+          </div>
+          <div class="block">
+              <div class="row" style="margin-top:0; margin-bottom:5px; align-items:center;">
+                <div class="label" style="margin:0;">GATEWAY FEED (Click ID to Lock)</div>
+                <label class="hint" style="justify-content:flex-end;">
+                  <input type="checkbox" class="filterLockedOnly"> Target Stream Only
+                </label>
+              </div>
+              <div class="log chatLog">Bond a valid user token to start the gateway stream...</div>
+          </div>
+      </section>
+
+      <!-- 3. Normal Burst -->
+      <section class="pane" data-pane="normal">
+        <div class="block" style="margin-top:0;">
+          <div class="label"><span class="step-tag">Step 3</span> BURST TRANSMISSION PAYLOAD</div>
+          <textarea class="message" placeholder="Type transmission payload and strike Enter to warp into locked GC..."></textarea>
+          <div class="row">
+              <input type="text" class="startMessage" placeholder="Prefix (optional)">
+              <input type="text" class="endMessage" placeholder="Suffix (optional)">
+          </div>
+          <label class="hint" style="margin-top:5px;"><input type="checkbox" class="invertEnter"> Send only on Shift+Enter</label>
+          <div class="row">
+            <button class="toggle uppercase">UPPERCASE</button>
+            <button class="btn sendMessage">WARP TRANSMIT</button>
+            <button class="toggle lowercase">lowercase</button>
+          </div>
+          <div class="block">
+              <div class="counters">
+                <div class="counter"><div class="k">Pending</div><div class="v normalQueueCount">0</div></div>
+                <div class="counter"><div class="k">Warped</div><div class="v normalSentCount">0</div></div>
+                <div class="counter"><div class="k">Rate Limits</div><div class="v normalRateLimitCount">0</div></div>
+              </div>
+              <div class="row" style="margin-top:6px;">
+                  <button class="btn secondary clearQueue">Clear Queue</button>
+                  <button class="btn secondary toggleQueue">Halt Flow</button>
+              </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 4. Adders -->
+      <section class="pane" data-pane="adders">
+          <div class="block" style="margin-top:0;">
+              <div class="label">ADDER AMMUNITION (SUFFIX WORD POOL)</div>
+               <label class="file-label adders-fileLabel">Upload Adders Manifest (.txt)</label>
+               <input type="file" class="file-input adders-fileLoader" accept=".txt"/>
+               <div class="hint adders-loadedWords" style="text-align:center; margin-top:4px;">No adders loaded</div>
+               <div class="range" style="margin-top:6px;">
+                <span class="hint">Pool: <span class="adderPoolValue">All</span></span>
+                <input type="range" class="adderPoolSlider" min="1" max="1" value="1" disabled/>
+              </div>
+          </div>
+          <div class="block">
+              <div class="label">INFUSE ADDERS INTO...</div>
+              <div class="grid-2">
+                   <label class="hint"><input type="checkbox" class="adderForNormal" checked> Burst Normal</label>
+                   <label class="hint"><input type="checkbox" class="adderForAutobeefer"> AutoBeefer</label>
+                   <label class="hint"><input type="checkbox" class="adderForKeybind"> Keybind Warp</label>
+                   <label class="hint"><input type="checkbox" class="adderForPretype"> Pre-Typer</label>
+              </div>
+          </div>
+      </section>
+
+      <!-- 5. Pre-Typer -->
+      <section class="pane" data-pane="pretyper">
+          <div class="block" style="margin-top:0;">
+              <div class="label">PRE-TYPER CONDENSER</div>
+              <div class="hint" style="margin-bottom:5px;">Prime multiple sentences; they release automatically once threshold is reached.</div>
+              <textarea class="pretype-entry" placeholder="Type line and strike Enter to arm into chamber..."></textarea>
+               <div class="row">
+                  <div class="range" style="flex:2">
+                    <span class="hint">Discharge: <span class="pretypeTriggerValue">2</span> msgs</span>
+                    <input type="range" class="pretypeTriggerSlider" min="1" max="10" step="1" value="2" />
+                  </div>
+                  <button class="btn secondary pretype-clear">Evacuate</button>
+              </div>
+              <div class="block">
+                  <div class="label">CONDENSER STATUS</div>
+                  <div class="hint pretype-status">Chamber empty. Waiting for input.</div>
+              </div>
+          </div>
+      </section>
+      
+      <!-- 6. Time Ladder -->
+      <section class="pane" data-pane="ladder">
+          <div class="block" style="margin-top:0;">
+              <div class="label">TIME-LADDER SEQUENCE</div>
+              <textarea class="ladder-message" placeholder="Input sentence or words to shred line-by-line across time..."></textarea>
+              <div class="range" style="margin-top:6px;">
+                  <span class="hint">Delay: <span class="ladderDelayValue">0.10</span>s</span>
+                  <input type="range" class="ladderDelaySlider" min="0.05" max="2" step="0.05" value="0.10" />
+              </div>
+              <label class="hint" style="margin-top:5px;"><input type="checkbox" class="spamLadderMode"> Infinite Loop Mode</label>
+              <div class="row">
+                  <button class="btn startLadder">Initiate</button>
+                  <button class="btn stopLadder" disabled>Sever</button>
+              </div>
+          </div>
+      </section>
+
+      <!-- 7. AutoBeefer -->
+      <section class="pane" data-pane="autobeefer">
+        <div class="row" style="margin-top: 0;">
+            <div class="block" style="flex:1; margin:0;">
+              <div class="label">ARSENAL SOURCE</div>
+              <label class="file-label fileLoader-label">Upload Wordlist (.txt)</label>
+              <input type="file" class="file-input fileLoader" accept=".txt" />
+              <div class="hint loadedWords" style="text-align: center; margin-top: 4px;">Loaded: 0</div>
+            </div>
+            <div class="block" style="flex:1; margin:0;">
+              <div class="label">WARP CADENCE</div>
+               <div class="range">
+                <span class="hint">Delay: <span class="delayValue">0.50</span>s</span>
+                <input type="range" class="delaySlider" min="0.1" max="5" step="0.05" value="0.5" />
+              </div>
+              <div class="row" style="margin-top:6px">
+                <button class="btn startSending">Fire</button>
+                <button class="btn stopSending" disabled>Cease</button>
+              </div>
+            </div>
+        </div>
+        <div class="block">
+          <div class="label">PRECISION & DISTORTION</div>
+          <div class="range">
+            <span class="hint">Accuracy: <span class="accuracyValue">100</span>%</span>
+            <input type="range" class="accuracySlider" min="0" max="100" value="100" />
+          </div>
+          <div class="range" style="margin-top:5px;">
+            <span class="hint">Sentence Limit: <span class="sentenceLimitValue">All</span></span>
+            <input type="range" class="sentenceLimitSlider" min="1" max="1" value="1" disabled/>
+          </div>
+          <label class="hint" style="margin-top:5px;"><input type="checkbox" class="autobeefer-punctuation"> Suffix Punctuation</label>
+        </div>
+      </section>
+      
+      <!-- 8. Title Shift -->
+      <section class="pane" data-pane="titlechanger">
+          <div class="block" style="margin-top:0;">
+              <div class="label">GC TITLE SHIFT</div>
+              <textarea class="titlechanger-titles" placeholder="Enter one title per line..."></textarea>
+              <div class="range" style="margin-top:6px">
+                <span class="hint">Interval: <span class="titlechangerDelayValue">300</span>s</span>
+                <input type="range" class="titlechangerDelaySlider" min="2" max="600" step="1" value="300" />
+              </div>
+              <div class="row">
+                <button class="btn startTitleChanger">Engage</button>
+                <button class="btn stopTitleChanger" disabled>Halt</button>
+              </div>
+          </div>
+      </section>
+
+      <!-- 9. Additional Flow -->
+      <section class="pane" data-pane="additional">
+          <div class="block" style="margin-top:0;">
+              <div class="label">INTERLEAVED ECHO</div>
+              <textarea class="additional-message" placeholder="Type manual message and press Enter..."></textarea>
+          </div>
+          <div class="block">
+              <label class="hint"><input type="checkbox" class="additionalEnabled"> Fire 2 auto-words after every manual send</label>
+              <label class="file-label additional-fileLoader-label" style="margin-top:5px;">Upload Wordlist</label>
+              <input type="file" class="file-input additional-fileLoader" accept=".txt">
+              <div class="hint additional-loadedWords" style="text-align:center; margin-top:4px;">No wordlist loaded</div>
+          </div>
+      </section>
+
+      <!-- 10. Keybinds -->
+      <section class="pane" data-pane="keybind">
+          <div class="block" style="margin-top:0;">
+              <div class="label">KEYBIND ORDNANCE</div>
+              <label class="file-label keybindFileLoader-label">Upload Keybind Wordlist (.txt)</label>
+              <input type="file" class="file-input keybindFileLoader" accept=".txt">
+              <div class="hint keybindLoadedWords" style="text-align: center; margin-top: 4px;">Loaded: 0</div>
+          </div>
+          <div class="block">
+              <div class="label">INSTANT TRIGGER</div>
+              <div class="row">
+                  <select class="triggerKey">
+                    <option value="Delete">Delete Key</option>
+                    <option value="F1">F1</option><option value="F2">F2</option><option value="F3">F3</option><option value="F4">F4</option>
+                  </select>
+                  <button class="toggle keybind-enabled">DISARMED</button>
+              </div>
+          </div>
+      </section>
+
+      <!-- 11. Anti-AFK -->
+      <section class="pane" data-pane="afk">
+        <div class="block" style="margin-top:0;">
+          <div class="label">ANTI-AFK ORACLE</div>
+          <div class="row">
+              <button class="btn startAfkCheck">Awaken (Anti-AFK ON)</button>
+              <button class="btn secondary stopAfkCheck" disabled>Sleep (OFF)</button>
+          </div>
+          <div class="hint" style="margin-top:6px; color:var(--gold-tempo);">Status: <span class="afkStatusIndicator" style="font-weight:bold; color:var(--warn-amber);">OFFLINE</span></div>
+          <label class="hint" style="margin-top:6px;">
+            <input type="checkbox" class="afkQuoteReply" checked> Quote/Reply to original trigger message
+          </label>
+          <label class="hint" style="margin-top:4px;">
+            <input type="checkbox" class="afkAnywhere"> Scan in ALL channels (Uncheck to restrict to locked GC only)
+          </label>
+          <input type="text" class="afkCheckPhrases" placeholder="Trigger Phrases (comma-separated)" style="margin-top:6px;" value="afk, u here, 5, 4, 3, tempo, horogium">
+          <input type="text" class="afkReplyMessages" placeholder="AFK Responses (comma-separated)" style="margin-top:6px;" value="here, alive, horogium active, time freeze, still up">
+          
+          <div class="row" style="margin-top:8px;">
+            <input type="text" class="testTriggerInput" placeholder="Type text to test AFK trigger (e.g. 'are you afk?')">
+            <button class="btn secondary runTestTriggerBtn" style="flex:0 0 auto;">Simulate</button>
+          </div>
+
+          <div class="block" style="margin-top:6px">
+            <div class="log afkChatLog">Oracle dormant. Click 'Awaken' to start scanning.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12. Auto-Reply (Dedicated Engine with Quote & Wordlist) -->
+      <section class="pane" data-pane="autoreply">
+        <div class="block" style="margin-top:0;">
+          <div class="label">SMART AUTO-REPLY ENGINE</div>
+          <div class="hint" style="margin-bottom:6px;">Upload a .txt dictionary or enter custom triggers to automatically quote and respond.</div>
+          <div class="row">
+            <button class="btn startAutoReplyBtn">Activate Auto-Reply</button>
+            <button class="btn secondary stopAutoReplyBtn" disabled>Deactivate</button>
+          </div>
+          <div class="hint" style="margin-top:6px; color:var(--gold-tempo);">Status: <span class="autoReplyStatusIndicator" style="font-weight:bold; color:var(--warn-amber);">OFFLINE</span></div>
+          
+          <div class="grid-2" style="margin-top:6px;">
+            <label class="hint">
+              <input type="checkbox" class="autoReplyQuoteMsg" checked> <b>Quote Target Message</b>
+            </label>
+            <label class="hint">
+              <input type="checkbox" class="autoReplyAnywhere" checked> Reply across all chats
+            </label>
+          </div>
+
+          <input type="text" class="autoReplyFilterUser" placeholder="Specific Target User ID (Leave blank to reply to everyone)" style="margin-top:6px;"/>
+          <input type="text" class="autoReplyTriggers" placeholder="Trigger Phrases (comma-separated, leave blank to match any message)" style="margin-top:6px;" value="hi, hello, yo, test, horogium"/>
+          
+          <label class="file-label autoReplyFileLoader-label" style="margin-top:8px;">Upload Auto-Reply Dictionary (.txt)</label>
+          <input type="file" class="file-input autoReplyFileLoader" accept=".txt"/>
+          <div class="hint autoReplyLoadedWords" style="text-align: center; margin-top: 4px;">Loaded: 0 words</div>
+
+          <input type="text" class="autoReplyFallbackMessages" placeholder="Fallback Responses (comma-separated if no file loaded)" style="margin-top:6px;" value="Spiral Dimension engaged, Twisted Tempo here, Time Prison active"/>
+          
+          <div class="row" style="margin-top:8px;">
+            <input type="text" class="testAutoReplyInput" placeholder="Type message to test Auto-Reply locally...">
+            <button class="btn secondary testAutoReplyBtn" style="flex:0 0 auto;">Simulate Auto-Reply</button>
+          </div>
+
+          <div class="block" style="margin-top:6px">
+            <div class="log autoReplyChatLog">Auto-Reply Engine idle...</div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 13. Config -->
+      <section class="pane" data-pane="options">
+        <div class="block" style="margin-top:0;">
+          <div class="label">CONFIG & RATE DILATION</div>
+          <label class="hint"><input type="checkbox" class="enableAutoReact" checked> Auto-react to own sent messages</label>
+          <input type="text" class="reactionEmoji" placeholder="Reaction Glyph" value="⏳" style="margin-top:5px"/>
+          <label class="hint" style="margin-top: 5px;"><input type="checkbox" class="typingIndicators" checked> Show 'typing...' indicator</label>
+          <label class="hint" style="margin-top: 5px;"><input type="checkbox" class="smartRateHandling" checked> Smart Rate Limit Delay Dilation</label>
+        </div>
+      </section>
+    </div>
+  </template>
+
+<script>
+  let soundEnabled = true;
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function playChronoSound(type) {
+    if (!soundEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      if (type === 'lock') {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(440, t);
+        osc.frequency.exponentialRampToValueAtTime(880, t + 0.12);
+        gain.gain.setValueAtTime(0.08, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t); osc.stop(t + 0.18);
+      } else if (type === 'send') {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(900, t);
+        osc.frequency.exponentialRampToValueAtTime(300, t + 0.06);
+        gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t); osc.stop(t + 0.06);
+      }
+    } catch(e) {}
+  }
+
+  const soundBtn = document.getElementById('soundToggleBtn');
+  soundBtn.onclick = () => {
+    initAudio();
+    soundEnabled = !soundEnabled;
+    soundBtn.classList.toggle('active', soundEnabled);
+    soundBtn.innerHTML = soundEnabled ? '<span>🔊 SYNTH</span>' : '<span>🔇 MUTED</span>';
+    if (soundEnabled) playChronoSound('lock');
+  };
+
+  const canvas = document.getElementById('battleCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0;
+  function resizeCanvas() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  let sparks = [];
+
+  const tempo = {
+    name: 'Horogium',
+    x: W * 0.35, y: H * 0.5,
+    vx: 1.8, vy: 1.2,
+    radius: 38,
+    angle: 0,
+    spinSpeed: 0.22,
+    core: '#ffd700',
+    aura: '#00f2fe'
+  };
+
+  const nemesis = {
+    name: 'Nemesis',
+    x: W * 0.65, y: H * 0.5,
+    vx: -1.9, vy: -1.3,
+    radius: 36,
+    angle: 0,
+    spinSpeed: -0.25,
+    core: '#ff0055',
+    aura: '#a855f7'
+  };
+
+  function drawBey(b) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+
+    const grad = ctx.createRadialGradient(0, 0, 8, 0, 0, b.radius * 1.5);
+    grad.addColorStop(0, b.aura);
+    grad.addColorStop(0.6, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.radius * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.rotate(b.angle);
+
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = b.core;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * (b.radius - 6), Math.sin(a) * (b.radius - 6));
+      ctx.lineTo(Math.cos(a) * (b.radius + 4), Math.sin(a) * (b.radius + 4));
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    if (b.name === 'Horogium') {
+      ctx.strokeStyle = '#00f2fe';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.radius * 0.55, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * (b.radius * 0.45), Math.sin(a) * (b.radius * 0.45));
+        ctx.lineTo(Math.cos(a) * (b.radius * 0.55), Math.sin(a) * (b.radius * 0.55));
+        ctx.stroke();
+      }
+    }
+
+    ctx.fillStyle = b.core;
+    ctx.beginPath();
+    ctx.arc(0, 0, 9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function renderBattle() {
+    ctx.clearRect(0, 0, W, H);
+
+    const cx = W / 2, cy = H / 2;
+    const stadiumR = Math.min(W, H) * 0.44;
+
+    ctx.strokeStyle = 'rgba(255, 215, 0, 0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, stadiumR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    [tempo, nemesis].forEach(b => {
+      b.angle += b.spinSpeed;
+      b.x += b.vx;
+      b.y += b.vy;
+
+      const dist = Math.hypot(b.x - cx, b.y - cy);
+      if (dist + b.radius > stadiumR) {
+        const a = Math.atan2(b.y - cy, b.x - cx);
+        b.vx = -Math.cos(a) * Math.abs(b.vx);
+        b.vy = -Math.sin(a) * Math.abs(b.vy);
+      }
+    });
+
+    const dx = nemesis.x - tempo.x;
+    const dy = nemesis.y - tempo.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < tempo.radius + nemesis.radius) {
+      const a = Math.atan2(dy, dx);
+      tempo.vx = -Math.cos(a) * 3.5;
+      tempo.vy = -Math.sin(a) * 3.5;
+      nemesis.vx = Math.cos(a) * 3.5;
+      nemesis.vy = Math.sin(a) * 3.5;
+
+      for (let i = 0; i < 12; i++) {
+        sparks.push({
+          x: (tempo.x + nemesis.x) / 2,
+          y: (tempo.y + nemesis.y) / 2,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 0.8,
+          color: Math.random() > 0.5 ? '#ffd700' : '#00f2fe'
+        });
+      }
+    }
+
+    drawBey(tempo);
+    drawBey(nemesis);
+
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const p = sparks[i];
+      p.x += p.vx; p.y += p.vy;
+      p.life -= 0.035;
+      if (p.life <= 0) { sparks.splice(i, 1); continue; }
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(renderBattle);
+  }
+  requestAnimationFrame(renderBattle);
+
+  /* =========================================================
+     24/7 ULTRA-RESILIENT BACKGROUND KEEP-ALIVE
+     ========================================================= */
+  let keepAliveActive = true, keepAliveInterval = null, audioTicker = null;
+  let wakeLockObj = null;
+
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator && keepAliveActive) {
+        wakeLockObj = await navigator.wakeLock.request('screen');
+      }
+    } catch(e) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && keepAliveActive) requestWakeLock();
+  });
+
+  function startKeepAliveEngine() {
+    keepAliveActive = true;
+    requestWakeLock();
+    // Continuous subtle ticker to block browser background throttling
+    if (!audioTicker) {
+      audioTicker = setInterval(() => {
+        try {
+          initAudio();
+          if (audioCtx && audioCtx.state === 'running') {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            g.gain.value = 0.00001; // Silent audio ping
+            osc.connect(g);
+            g.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.01);
+          }
+        } catch(e) {}
+      }, 8000);
+    }
+    if (!keepAliveInterval) {
+      keepAliveInterval = setInterval(() => {
+        const dummy = document.getElementById('keepAliveTarget');
+        if (dummy) dummy.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }, 15000);
+    }
+    document.getElementById('wakeLockBtn').classList.add('active');
+    document.getElementById('wakeLockText').textContent = "WAKE: 24/7 ON";
+  }
+
+  function stopKeepAliveEngine() {
+    keepAliveActive = false;
+    if (wakeLockObj) { wakeLockObj.release(); wakeLockObj = null; }
+    if (audioTicker) { clearInterval(audioTicker); audioTicker = null; }
+    if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
+    document.getElementById('wakeLockBtn').classList.remove('active');
+    document.getElementById('wakeLockText').textContent = "WAKE: OFF";
+  }
+  document.getElementById('wakeLockBtn').onclick = () => {
+    if (keepAliveActive) stopKeepAliveEngine(); else startKeepAliveEngine();
+  };
+  startKeepAliveEngine();
+
+  const tokenTabsList = document.getElementById('tokenTabsList');
+  const multiViewport = document.getElementById('multiViewport');
+  const templateHtml = document.getElementById('baseUiTemplate').innerHTML;
+  let vessels = {};
+  let currentActiveId = null;
+
+  function spawnTokenSystem(id, presetName) {
+    const sysId = id || 'tempo_' + Math.random().toString(36).substring(2, 9);
+    const sysName = presetName || `Vessel #${Object.keys(vessels).length + 1}`;
+
+    const pill = document.createElement('div');
+    pill.className = 'token-pill';
+    const titleText = document.createElement('span');
+    titleText.textContent = sysName;
+    pill.appendChild(titleText);
+
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'close-pill';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = (e) => { e.stopPropagation(); removeTokenSystem(sysId); };
+    pill.appendChild(closeBtn);
+    pill.onclick = () => { initAudio(); activateTokenSystem(sysId); };
+    tokenTabsList.appendChild(pill);
+
+    const workspace = document.createElement('div');
+    workspace.className = 'token-workspace';
+    workspace.id = `ws_${sysId}`;
+    workspace.innerHTML = templateHtml;
+    multiViewport.appendChild(workspace);
+
+    workspace.querySelectorAll('input[type="file"]').forEach(input => {
+      const cls = input.className.split(' ')[1] || input.className;
+      const uniqueId = cls + '_' + sysId;
+      input.id = uniqueId;
+      const lbl = workspace.querySelector(`.${cls}-label`);
+      if (lbl) lbl.setAttribute('for', uniqueId);
+    });
+
+    vessels[sysId] = { id: sysId, pill, workspace, titleText };
+    setupIsolatedLogic(workspace, sysId, titleText);
+    activateTokenSystem(sysId);
+  }
+
+  function activateTokenSystem(id) {
+    currentActiveId = id;
+    Object.keys(vessels).forEach(key => {
+      const match = key === id;
+      vessels[key].pill.classList.toggle('active', match);
+      vessels[key].workspace.classList.toggle('active', match);
+    });
+  }
+
+  function removeTokenSystem(id) {
+    const keys = Object.keys(vessels);
+    if (keys.length <= 1) return;
+    if (!vessels[id]) return;
+    vessels[id].pill.remove();
+    vessels[id].workspace.remove();
+    localStorage.removeItem(`divine_acc_${id}`);
+    localStorage.removeItem(`divine_ch_${id}`);
+    localStorage.removeItem(`divine_owner_${id}`);
+    delete vessels[id];
+    if (currentActiveId === id) activateTokenSystem(Object.keys(vessels)[0]);
+  }
+
+  document.getElementById('addNewTokenBtn').onclick = () => { initAudio(); spawnTokenSystem(); };
+
+  function setupIsolatedLogic(root, sysId, titleText) {
+    const $ = sel => root.querySelector(sel);
+    const $$ = sel => root.querySelectorAll(sel);
+
+    const tabs = $$('.tabs .tab');
+    const panes = $$('.pane');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      initAudio();
+      tabs.forEach(x => x.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+      t.classList.add('active');
+      const targetPane = root.querySelector(`.pane[data-pane="${t.dataset.pane}"]`);
+      if (targetPane) targetPane.classList.add('active');
+    }));
+
+    let accounts = [];
+    let selectedToken = null;
+    let selfUserId = null;
+    let targetChannelId = null;
+    let queuePaused = false;
+    let autoReact = true;
+    let typingInd = true;
+    let isTypingActive = false;
+    let smartRate = true;
+    let rateLimited = false;
+
+    let invertEnterKey = false;
+    let addersActive = true, addersList = [], adderConfig = { normal: true, autobeefer: false, keybind: false, pretype: false };
+    let beeferSentences = [], beeferDelay = 0.5, beeferRunning = false, beeferTimer = null, beeferPunct = false;
+    let ladderRunning = false, ladderTimer = null;
+    let titleChangerRunning = false, titleChangerTimer = null;
+    
+    let afkRunning = false;
+    let autoReplyRunning = false, autoReplyWords = [];
+
+    let keybindWords = [], keybindArmed = false;
+    let pretypeQueue = [];
+    let interleaveWords = [];
+    let wsSocket = null, wsHeartbeat = null, reconnectTimer = null;
+
+    const ownerInput = $('.ownerUserId');
+    const savedOwner = localStorage.getItem(`divine_owner_${sysId}`);
+    if (savedOwner) ownerInput.value = savedOwner;
+    ownerInput.oninput = e => { localStorage.setItem(`divine_owner_${sysId}`, e.target.value.trim()); };
+
+    const targetBadge = $('.targetStatusBadge');
+    const channelInput = $('.globalChannelId');
+
+    function setDedicatedTarget(channelId) {
+      targetChannelId = channelId ? channelId.trim() : null;
+      if (targetChannelId) {
+        localStorage.setItem(`divine_ch_${sysId}`, targetChannelId);
+        channelInput.value = targetChannelId;
+        targetBadge.textContent = `🎯 Bound: ${targetChannelId}`;
+        targetBadge.classList.add('locked');
+      } else {
+        localStorage.removeItem(`divine_ch_${sysId}`);
+        channelInput.value = '';
+        targetBadge.textContent = `🌐 Scanning (Type 'xTarget')`;
+        targetBadge.classList.remove('locked');
+      }
+    }
+
+    $('.unlockTargetBtn').onclick = () => {
+      initAudio();
+      setDedicatedTarget(null);
+      myQueue.logMsg(`🔓 Channel singularity cleared.`, 'var(--warn-amber)');
+    };
+    channelInput.oninput = e => { setDedicatedTarget(e.target.value.trim()); };
+
+    const closeWs = () => {
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+      if (wsSocket) { wsSocket.onclose = null; wsSocket.onerror = null; wsSocket.close(); }
+      if (wsHeartbeat) clearInterval(wsHeartbeat);
+      wsSocket = null; wsHeartbeat = null;
+    };
+
+    // 1. INDEPENDENT ANTI-AFK HANDLER WITH DISCORD QUOTE
+    function checkAndFireAfk(incomingText, authorId, msgChan, msgId) {
+      if (!afkRunning) return;
+      if (authorId && selfUserId && authorId === selfUserId) return;
+
+      const replyAnywhere = $('.afkAnywhere').checked;
+      if (!replyAnywhere && targetChannelId && msgChan !== targetChannelId) return;
+
+      const rawContent = (incomingText || '').trim().toLowerCase();
+      if (!rawContent) return;
+
+      const rawPhrases = $('.afkCheckPhrases').value || '';
+      const phrases = rawPhrases.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+      const isMatch = phrases.some(p => rawContent.includes(p));
+
+      if (isMatch) {
+        const rawReplies = $('.afkReplyMessages').value || '';
+        const replies = rawReplies.split(',').map(s => s.trim()).filter(Boolean);
+        if (replies.length > 0) {
+          const chosen = replies[Math.floor(Math.random() * replies.length)];
+          const finalDest = msgChan || targetChannelId;
+          const shouldQuote = $('.afkQuoteReply').checked;
+          if (finalDest) {
+            myQueue.enqueue({
+              msg: chosen,
+              origin: 'afk',
+              overrideChannel: finalDest,
+              replyToId: shouldQuote ? msgId : null
+            });
+          }
+          const afkLog = $('.afkChatLog');
+          const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          afkLog.innerHTML += `<div style="color:var(--ok-emerald)">[${t}] AFK Triggered: "${rawContent}" -> Replied: "${chosen}" ${shouldQuote ? '(Quoted)' : ''}</div>`;
+          afkLog.scrollTop = afkLog.scrollHeight;
+        }
+      }
+    }
+
+    // 2. INDEPENDENT SMART AUTO-REPLY HANDLER WITH DISCORD QUOTE
+    function checkAndFireAutoReply(incomingText, authorId, msgChan, msgId) {
+      if (!autoReplyRunning) return;
+      if (authorId && selfUserId && authorId === selfUserId) return;
+
+      const replyAnywhere = $('.autoReplyAnywhere').checked;
+      if (!replyAnywhere && targetChannelId && msgChan !== targetChannelId) return;
+
+      const filterUser = $('.autoReplyFilterUser').value.trim();
+      if (filterUser && authorId !== filterUser) return;
+
+      const rawContent = (incomingText || '').trim().toLowerCase();
+      const rawTriggers = $('.autoReplyTriggers').value.trim();
+      
+      let shouldReply = true;
+      if (rawTriggers) {
+        const triggers = rawTriggers.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        shouldReply = triggers.some(t => rawContent.includes(t));
+      }
+
+      if (shouldReply) {
+        let pool = autoReplyWords;
+        if (pool.length === 0) {
+          pool = $('.autoReplyFallbackMessages').value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if (pool.length > 0) {
+          const chosen = pool[Math.floor(Math.random() * pool.length)];
+          const finalDest = msgChan || targetChannelId;
+          const shouldQuote = $('.autoReplyQuoteMsg').checked;
+          if (finalDest) {
+            myQueue.enqueue({
+              msg: chosen,
+              origin: 'normal',
+              overrideChannel: finalDest,
+              replyToId: shouldQuote ? msgId : null
+            });
+          }
+          const arLog = $('.autoReplyChatLog');
+          const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          arLog.innerHTML += `<div style="color:var(--cyan-temporal)">[${t}] Auto-Reply: "${rawContent}" -> Sent: "${chosen}" ${shouldQuote ? '(Quoted)' : ''}</div>`;
+          arLog.scrollTop = arLog.scrollHeight;
+        }
+      }
+    }
+
+    // DISCORD GATEWAY WEBSOCKET SCANNER (AUTO RECONNECT 24/7)
+    async function startChatWebSocket() {
+      closeWs();
+      const token = selectedToken, logEl = $('.chatLog');
+      if (!token) {
+        logEl.textContent = "Bond a valid token to start gateway stream.";
+        return;
+      }
+      
+      try {
+        logEl.innerHTML = `<span style="color:var(--cyan-temporal)">Connecting to Gateway (v9)...</span>`;
+        const gatewayUrl = `wss://gateway.discord.gg/?v=9&encoding=json`;
+        wsSocket = new WebSocket(gatewayUrl);
+
+        wsSocket.onopen = () => {
+          logEl.innerHTML = `<span style="color:var(--gold-tempo)">Identifying with Discord...</span>`;
+          wsSocket.send(JSON.stringify({
+            op: 2,
+            d: {
+              token: token,
+              capabilities: 8189,
+              properties: {
+                os: 'Windows',
+                browser: 'Chrome',
+                device: '',
+                system_locale: 'en-US',
+                browser_user_agent: navigator.userAgent,
+                browser_version: '120.0.0.0',
+                os_version: '10',
+                release_channel: 'stable',
+                client_build_number: 250000
+              },
+              presence: { status: 'online', since: 0, activities: [], afk: false },
+              compress: false
+            }
+          }));
+        };
+
+        wsSocket.onmessage = async e => {
+          let payload;
+          try { payload = JSON.parse(e.data); } catch(err) { return; }
+
+          if (payload.op === 10) {
+            if (wsHeartbeat) clearInterval(wsHeartbeat);
+            wsHeartbeat = setInterval(() => {
+              if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
+                wsSocket.send(JSON.stringify({ op: 1, d: null }));
+              }
+            }, payload.d.heartbeat_interval);
+          }
+
+          if (payload.t === 'READY' && payload.d?.user) {
+            selfUserId = payload.d.user.id;
+            logEl.innerHTML = `<span style="color:var(--ok-emerald)">✅ Connected: <b>${payload.d.user.username}</b> (${selfUserId})</span>`;
+          }
+
+          if (payload.t === 'MESSAGE_CREATE') {
+            const msg = payload.d;
+            const msgChan = msg.channel_id;
+            const msgId = msg.id;
+            const msgContent = msg.content || '';
+            const contentTrim = msgContent.trim().toLowerCase();
+            const author = msg.author || {};
+            const authorId = author.id;
+            const authorName = msg.member?.nick || author.global_name || author.username || 'Unknown';
+            const customOwnerId = ownerInput.value.trim();
+
+            if (contentTrim === 'xtarget') {
+              const isMatchOwner = customOwnerId ? (authorId === customOwnerId) : true;
+              if (isMatchOwner) {
+                setDedicatedTarget(msgChan);
+                playChronoSound('lock');
+                myQueue.logMsg(`🎯 Target locked to channel: ${msgChan}`, 'var(--ok-emerald)');
+                if ($('.autoDeleteXTarget').checked && authorId === selfUserId) {
+                  fetch(`https://discord.com/api/v9/channels/${msgChan}/messages/${msg.id}`, {
+                    method: 'DELETE', headers: { 'Authorization': selectedToken }
+                  }).catch(() => {});
+                }
+                return;
+              }
+            }
+
+            const onlyLocked = $('.filterLockedOnly').checked;
+            if (!onlyLocked || !targetChannelId || msgChan === targetChannelId) {
+              if (logEl.textContent.startsWith("Bond a") || logEl.textContent.startsWith("Connecting") || logEl.textContent.startsWith("Identifying")) {
+                logEl.innerHTML = "";
+              }
+              const time = new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const line = document.createElement('div');
+              line.innerHTML = `<span style="color:var(--text-muted)">[${time}]</span> <span class="chan-badge" style="color:var(--cyan-temporal); cursor:pointer; font-weight:700;">[#${msgChan}]</span> <b>${authorName}:</b> ${msgContent.replace(/</g, "&lt;")}`;
+              line.querySelector('.chan-badge').onclick = () => {
+                initAudio();
+                setDedicatedTarget(msgChan);
+                playChronoSound('lock');
+              };
+              logEl.appendChild(line);
+              logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            // PASS MESSAGE ID FOR REAL QUOTE / REPLY
+            checkAndFireAfk(msgContent, authorId, msgChan, msgId);
+            checkAndFireAutoReply(msgContent, authorId, msgChan, msgId);
+          }
+        };
+
+        wsSocket.onerror = () => {
+          logEl.innerHTML = `<span style="color:var(--err-crimson)">❌ Gateway stream error. Auto-reconnecting...</span>`;
+        };
+        wsSocket.onclose = ev => {
+          logEl.innerHTML = `<span style="color:var(--warn-amber)">⚠️ Disconnected (${ev.code}). Re-engaging 24/7 link in 3s...</span>`;
+          if (!reconnectTimer) {
+            reconnectTimer = setTimeout(() => {
+              reconnectTimer = null;
+              startChatWebSocket();
+            }, 3000);
+          }
+        };
+      } catch (e) {
+        logEl.textContent = "Gateway initialization failed.";
+      }
+    }
+
+    const accSelector = $('.accountSelector');
+    const statusBox = $('.status');
+
+    function refreshAccountUI() {
+      const prevToken = selectedToken;
+      accSelector.innerHTML = '';
+      if (accounts.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = "No Vessels bonded";
+        opt.disabled = true;
+        accSelector.appendChild(opt);
+        selectedToken = null;
+      } else {
+        accounts.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.token;
+          opt.textContent = a.alias;
+          accSelector.appendChild(opt);
+        });
+        const match = accounts.find(a => a.token === prevToken);
+        selectedToken = match ? prevToken : accounts[0].token;
+        accSelector.value = selectedToken;
+      }
+      const active = selectedToken && selectedToken.trim().length > 0;
+      statusBox.classList.toggle('active', active);
+      statusBox.querySelector('.pill').textContent = active ? 'Synchronized' : 'Inactive';
+      startChatWebSocket();
+      const activeAccount = accounts.find(a => a.token === selectedToken);
+      if (activeAccount) titleText.textContent = activeAccount.alias;
+    }
+
+    $('.addAccount').onclick = () => {
+      initAudio();
+      const alias = $('.accountAlias').value.trim();
+      const token = $('.newAccountToken').value.trim();
+      if (!alias || !token) return;
+      accounts.push({ alias, token });
+      localStorage.setItem(`divine_acc_${sysId}`, JSON.stringify(accounts));
+      $('.accountAlias').value = '';
+      $('.newAccountToken').value = '';
+      selectedToken = token;
+      refreshAccountUI();
+      playChronoSound('lock');
+    };
+
+    $('.removeAccount').onclick = () => {
+      initAudio();
+      if (!selectedToken) return;
+      accounts = accounts.filter(a => a.token !== selectedToken);
+      localStorage.setItem(`divine_acc_${sysId}`, JSON.stringify(accounts));
+      selectedToken = accounts.length > 0 ? accounts[0].token : null;
+      refreshAccountUI();
+    };
+
+    accSelector.onchange = e => {
+      initAudio();
+      selectedToken = e.target.value;
+      refreshAccountUI();
+    };
+
+    const savedAccs = localStorage.getItem(`divine_acc_${sysId}`);
+    if (savedAccs) accounts = JSON.parse(savedAccs);
+    const savedChan = localStorage.getItem(`divine_ch_${sysId}`);
+    if (savedChan) setDedicatedTarget(savedChan);
+    if (accounts.length > 0) selectedToken = accounts[0].token;
+    refreshAccountUI();
+
+    /* HIGH-SPEED 24/7 EXECUTION QUEUE (WITH DISCORD MESSAGE_REFERENCE QUOTE) */
+    class ExecutionQueue {
+      constructor() {
+        this.queue = [];
+        this.isSending = false;
+        this.sentCount = 0;
+        this.rateLimitCount = 0;
+        this.nextTime = 0;
+      }
+      enqueue(item) { this.queue.push(item); this.updateUI(); this.kick(); }
+      setPause(val) { queuePaused = val; if (!val) this.kick(); }
+      clear() { this.queue = []; this.updateUI(); this.logMsg('Chamber cleared.'); }
+      updateUI() { $('.normalQueueCount').textContent = this.queue.length; }
+      incrementSent() { $('.normalSentCount').textContent = ++this.sentCount; }
+      incrementRl() { $('.normalRateLimitCount').textContent = ++this.rateLimitCount; }
+      logMsg(text, color = 'var(--text-muted)') {
+        const c = $('.chatLog'); if (!c) return;
+        if (c.textContent.startsWith("Bond a") || c.textContent.startsWith("Connecting") || c.textContent.startsWith("Identifying")) c.innerHTML = "";
+        const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const d = document.createElement('div');
+        d.innerHTML = `<span style="color:var(--text-muted)">[${t}]</span> <span style="color:${color}">${text}</span>`;
+        c.appendChild(d); c.scrollTop = c.scrollHeight;
+      }
+
+      async kick() {
+        if (this.isSending || queuePaused || rateLimited) return;
+        this.isSending = true;
+        while (this.queue.length > 0 && !queuePaused && !rateLimited) {
+          const item = this.queue[0];
+          // Minimized fast delay for maximum speed without immediate 429
+          const delayTime = 70 + (Math.random() * 40);
+          const wait = this.nextTime - performance.now();
+          if (wait > 0) await new Promise(r => setTimeout(r, wait));
+          if (queuePaused || rateLimited) { this.isSending = false; return; }
+
+          this.queue.shift();
+          this.updateUI();
+
+          try {
+            const res = await this.dispatch(item);
+            if (res.rateLimit) {
+              this.incrementRl();
+              const waitTime = res.retryAfter || 1000;
+              this.logMsg(`⚠️ Rate limited. Dilation: ${waitTime/1000}s`, 'var(--err-crimson)');
+              this.queue.unshift(item); this.updateUI();
+              if (smartRate) {
+                rateLimited = true;
+                setTimeout(() => { rateLimited = false; this.kick(); }, waitTime);
+              }
+            } else {
+              this.incrementSent();
+              playChronoSound('send');
+              this.logMsg(`⚡ Warped: ${item.msg.replace(/</g, '&lt;')} ${item.replyToId ? '(Quoted)' : ''}`, 'var(--cyan-temporal)');
+            }
+          } catch (e) {
+            this.logMsg(`Dispatch Failed: ${e.message}`, 'var(--err-crimson)');
+          }
+          this.nextTime = performance.now() + delayTime;
+        }
+        this.isSending = false;
+      }
+
+      async dispatch({ msg, overrideChannel, replyToId }) {
+        const destChan = overrideChannel || targetChannelId;
+        if (!selectedToken) throw new Error('No user token bonded.');
+        if (!destChan) throw new Error('No target locked.');
+
+        if (typingInd && !isTypingActive) {
+          isTypingActive = true;
+          fetch(`https://discord.com/api/v9/channels/${destChan}/typing`, {
+            method: 'POST', headers: { 'Authorization': selectedToken }
+          }).catch(() => {});
+          setTimeout(() => { isTypingActive = false; }, 6000);
+        }
+
+        // FULL DISCORD QUOTE/REPLY PAYLOAD
+        const payloadBody = { content: msg };
+        if (replyToId) {
+          payloadBody.message_reference = {
+            channel_id: destChan,
+            message_id: replyToId
+          };
+          payloadBody.allowed_mentions = { replied_user: true };
+        }
+
+        const r = await fetch(`https://discord.com/api/v9/channels/${destChan}/messages`, {
+          method: 'POST',
+          headers: { 'Authorization': selectedToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadBody)
+        });
+        if (r.status === 429) {
+          const j = await r.json();
+          return { rateLimit: true, retryAfter: (j.retry_after || 1) * 1000 };
+        }
+        if (!r.ok) throw new Error(`API Error ${r.status}`);
+        const jsn = await r.json();
+        if (autoReact) {
+          const em = encodeURIComponent($('.reactionEmoji').value || '⏳');
+          if (em) {
+            fetch(`https://discord.com/api/v9/channels/${destChan}/messages/${jsn.id}/reactions/${em}/@me`, {
+              method: 'PUT', headers: { 'Authorization': selectedToken }
+            }).catch(() => {});
+          }
+        }
+        return { rateLimit: false };
+      }
+    }
+    const myQueue = new ExecutionQueue();
+
+    function processAndQueue(message, origin, overrideChannel = null, replyToId = null) {
+      if (!targetChannelId && !overrideChannel) {
+        myQueue.logMsg(`⚠️ Cannot send: No GC Singularity locked!`, 'var(--err-crimson)');
+        return;
+      }
+      let finalMsg = message;
+      if (origin === 'autobeefer') {
+        const acc = parseInt($('.accuracySlider').value, 10);
+        if (acc < 100) finalMsg = mutateAccuracy(finalMsg, acc);
+        if (beeferPunct) finalMsg += ['.', ',', '..'][Math.floor(Math.random() * 3)];
+      }
+      if (addersActive && addersList.length > 0 && adderConfig[origin]) {
+        const limit = parseInt($('.adderPoolSlider').value, 10);
+        const pool = addersList.slice(0, limit);
+        if (pool.length > 0) finalMsg += ` ${pool[Math.floor(Math.random() * pool.length)]}`;
+      }
+      if ($('.uppercase').classList.contains('active')) finalMsg = finalMsg.toUpperCase();
+      if ($('.lowercase').classList.contains('active')) finalMsg = finalMsg.toLowerCase();
+      const pfx = $('.startMessage').value.trim();
+      const sfx = $('.endMessage').value.trim();
+      if (pfx) finalMsg = `${pfx} ${finalMsg}`;
+      if (sfx) finalMsg = `${finalMsg} ${sfx}`;
+      const pings = $('.globalPingUsers').value.trim();
+      if (pings) finalMsg += ` ${pings.split(',').map(id => `<@${id.trim()}>`).join(' ')}`;
+
+      myQueue.enqueue({ msg: finalMsg, origin, overrideChannel, replyToId });
+    }
+
+    /* Normal Burst */
+    const normalInput = $('.message');
+    const sendNormalMsg = () => {
+      initAudio();
+      const lines = normalInput.value.split('\n').map(m => m.trim()).filter(Boolean);
+      if (lines.length === 0) return;
+      lines.forEach(l => processAndQueue(l, 'normal'));
+      normalInput.value = '';
+    };
+    $('.sendMessage').onclick = sendNormalMsg;
+    normalInput.addEventListener('keydown', e => {
+      const cond = invertEnterKey ? (e.key === 'Enter' && e.shiftKey) : (e.key === 'Enter' && !e.shiftKey);
+      if (cond) { e.preventDefault(); sendNormalMsg(); }
+    });
+    $('.uppercase').onclick = e => {
+      e.currentTarget.classList.toggle('active');
+      if (e.currentTarget.classList.contains('active')) $('.lowercase').classList.remove('active');
+    };
+    $('.lowercase').onclick = e => {
+      e.currentTarget.classList.toggle('active');
+      if (e.currentTarget.classList.contains('active')) $('.uppercase').classList.remove('active');
+    };
+    $('.toggleQueue').onclick = () => {
+      initAudio();
+      queuePaused = !queuePaused;
+      $('.toggleQueue').textContent = queuePaused ? 'Resume' : 'Halt Flow';
+      myQueue.setPause(queuePaused);
+    };
+    $('.clearQueue').onclick = () => { initAudio(); myQueue.clear(); };
+
+    /* Pre-Typer Chamber */
+    const pretypeBox = $('.pretype-entry');
+    pretypeBox.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const val = pretypeBox.value.trim();
+        if (!val) return;
+        pretypeQueue.push(val);
+        pretypeBox.value = '';
+        const limit = parseInt($('.pretypeTriggerSlider').value, 10);
+        $('.pretype-status').textContent = `Armed: ${pretypeQueue.length} / ${limit}`;
+        if (pretypeQueue.length >= limit) {
+          pretypeQueue.forEach(m => processAndQueue(m, 'normal'));
+          pretypeQueue = [];
+          $('.pretype-status').textContent = `Discharged chamber! Waiting for intake.`;
+        }
+      }
+    });
+    $('.pretypeTriggerSlider').oninput = e => { $('.pretypeTriggerValue').textContent = e.target.value; };
+    $('.pretype-clear').onclick = () => { pretypeQueue = []; $('.pretype-status').textContent = 'Chamber cleared.'; };
+
+    /* Additional Flow */
+    $('.additional-fileLoader').onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        interleaveWords = ev.target.result.split(/\r?\n/).filter(Boolean);
+        $('.additional-loadedWords').textContent = `Loaded ${interleaveWords.length} words`;
+      };
+      r.readAsText(f);
+    };
+    const additionalInput = $('.additional-message');
+    additionalInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const val = additionalInput.value.trim();
+        if (!val) return;
+        processAndQueue(val, 'normal');
+        additionalInput.value = '';
+        if ($('.additionalEnabled').checked && interleaveWords.length > 0) {
+          const auto1 = interleaveWords[Math.floor(Math.random() * interleaveWords.length)];
+          const auto2 = interleaveWords[Math.floor(Math.random() * interleaveWords.length)];
+          setTimeout(() => processAndQueue(auto1, 'normal'), 200);
+          setTimeout(() => processAndQueue(auto2, 'normal'), 400);
+        }
+      }
+    });
+
+    /* Keybind Ordnance */
+    $('.keybindFileLoader').onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        keybindWords = ev.target.result.split(/\r?\n/).filter(Boolean);
+        $('.keybindLoadedWords').textContent = `Loaded ${keybindWords.length} munitions`;
+      };
+      r.readAsText(f);
+    };
+    $('.keybind-enabled').onclick = e => {
+      keybindArmed = !keybindArmed;
+      e.target.textContent = keybindArmed ? 'ARMED' : 'DISARMED';
+      e.target.classList.toggle('active', keybindArmed);
+    };
+    window.addEventListener('keydown', e => {
+      if (!keybindArmed || keybindWords.length === 0) return;
+      if (e.key === $('.triggerKey').value) {
+        const payload = keybindWords[Math.floor(Math.random() * keybindWords.length)];
+        processAndQueue(payload, 'keybind');
+      }
+    });
+
+    /* Ladder */
+    $('.ladderDelaySlider').oninput = e => { $('.ladderDelayValue').textContent = parseFloat(e.target.value).toFixed(2); };
+    $('.startLadder').onclick = () => {
+      initAudio();
+      if (!targetChannelId) return;
+      const raw = $('.ladder-message').value.trim();
+      if (!raw) return;
+      const parts = raw.split(/\s+|\n+/).filter(Boolean);
+      if (parts.length === 0) return;
+      ladderRunning = true; $('.startLadder').disabled = true; $('.stopLadder').disabled = false;
+      let i = 0;
+      const step = () => {
+        if (!ladderRunning) return;
+        processAndQueue(parts[i], 'normal');
+        i++;
+        if (i >= parts.length) {
+          if ($('.spamLadderMode').checked) i = 0;
+          else { $('.stopLadder').click(); return; }
+        }
+        ladderTimer = setTimeout(step, parseFloat($('.ladderDelaySlider').value) * 1000);
+      };
+      step();
+    };
+    $('.stopLadder').onclick = () => {
+      ladderRunning = false; clearTimeout(ladderTimer);
+      $('.startLadder').disabled = false; $('.stopLadder').disabled = true;
+    };
+
+    /* Title Shift */
+    $('.titlechangerDelaySlider').oninput = e => { $('.titlechangerDelayValue').textContent = e.target.value; };
+    $('.startTitleChanger').onclick = () => {
+      initAudio();
+      if (!targetChannelId) return;
+      const titles = $('.titlechanger-titles').value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (titles.length === 0) return;
+      titleChangerRunning = true; $('.startTitleChanger').disabled = true; $('.stopTitleChanger').disabled = false;
+      let idx = 0;
+      const changeTick = async () => {
+        if (!titleChangerRunning || !targetChannelId) return;
+        const name = titles[idx++ % titles.length];
+        try {
+          await fetch(`https://discord.com/api/v9/channels/${targetChannelId}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': selectedToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+          });
+        } catch (e) {}
+        titleChangerTimer = setTimeout(changeTick, parseInt($('.titlechangerDelaySlider').value, 10) * 1000);
+      };
+      changeTick();
+    };
+    $('.stopTitleChanger').onclick = () => {
+      titleChangerRunning = false; clearTimeout(titleChangerTimer);
+      $('.startTitleChanger').disabled = false; $('.stopTitleChanger').disabled = true;
+    };
+
+    /* Anti-AFK Logic */
+    const updateAfkStatusUI = () => {
+      const ind = $('.afkStatusIndicator');
+      if (afkRunning) {
+        ind.textContent = 'ONLINE (SCANNING)';
+        ind.style.color = 'var(--ok-emerald)';
+      } else {
+        ind.textContent = 'OFFLINE';
+        ind.style.color = 'var(--warn-amber)';
+      }
+    };
+
+    $('.startAfkCheck').onclick = () => {
+      initAudio();
+      afkRunning = true;
+      $('.startAfkCheck').disabled = true;
+      $('.stopAfkCheck').disabled = false;
+      updateAfkStatusUI();
+      $('.afkChatLog').innerHTML += '<div style="color:var(--ok-emerald)">[SYS] Anti-AFK Oracle scanning stream...</div>';
+    };
+
+    $('.stopAfkCheck').onclick = () => {
+      afkRunning = false;
+      $('.startAfkCheck').disabled = false;
+      $('.stopAfkCheck').disabled = true;
+      updateAfkStatusUI();
+      $('.afkChatLog').innerHTML += '<div style="color:var(--warn-amber)">[SYS] Anti-AFK Oracle paused.</div>';
+    };
+
+    $('.runTestTriggerBtn').onclick = () => {
+      const val = $('.testTriggerInput').value.trim();
+      if (!val) return;
+      if (!afkRunning) {
+        $('.afkChatLog').innerHTML += '<div style="color:var(--err-crimson)">[WARN] Click "Awaken" to enable Anti-AFK first!</div>';
+        return;
+      }
+      checkAndFireAfk(val, 'dummy_test_user', targetChannelId, '123456789012345678');
+      $('.testTriggerInput').value = '';
+    };
+
+    /* Smart Auto-Reply Logic (.txt File Wordlist Support) */
+    const updateAutoReplyStatusUI = () => {
+      const ind = $('.autoReplyStatusIndicator');
+      if (autoReplyRunning) {
+        ind.textContent = 'ONLINE (ACTIVE)';
+        ind.style.color = 'var(--ok-emerald)';
+      } else {
+        ind.textContent = 'OFFLINE';
+        ind.style.color = 'var(--warn-amber)';
+      }
+    };
+
+    $('.autoReplyFileLoader').onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        autoReplyWords = ev.target.result.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        $('.autoReplyLoadedWords').textContent = `Loaded: ${autoReplyWords.length} words`;
+      };
+      r.readAsText(f);
+    };
+
+    $('.startAutoReplyBtn').onclick = () => {
+      initAudio();
+      autoReplyRunning = true;
+      $('.startAutoReplyBtn').disabled = true;
+      $('.stopAutoReplyBtn').disabled = false;
+      updateAutoReplyStatusUI();
+      $('.autoReplyChatLog').innerHTML += '<div style="color:var(--ok-emerald)">[SYS] Smart Auto-Reply Engine activated!</div>';
+    };
+
+    $('.stopAutoReplyBtn').onclick = () => {
+      autoReplyRunning = false;
+      $('.startAutoReplyBtn').disabled = false;
+      $('.stopAutoReplyBtn').disabled = true;
+      updateAutoReplyStatusUI();
+      $('.autoReplyChatLog').innerHTML += '<div style="color:var(--warn-amber)">[SYS] Smart Auto-Reply Engine deactivated.</div>';
+    };
+
+    $('.testAutoReplyBtn').onclick = () => {
+      const val = $('.testAutoReplyInput').value.trim();
+      if (!val) return;
+      if (!autoReplyRunning) {
+        $('.autoReplyChatLog').innerHTML += '<div style="color:var(--err-crimson)">[WARN] Activate Auto-Reply first!</div>';
+        return;
+      }
+      checkAndFireAutoReply(val, 'dummy_auto_reply_user', targetChannelId, '123456789012345678');
+      $('.testAutoReplyInput').value = '';
+    };
+
+    /* Adders Loader */
+    $('.adders-fileLoader').onchange = e => {
+      const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+      r.onload = ev => {
+        addersList = ev.target.result.split(/\r?\n/).filter(Boolean);
+        $('.adders-loadedWords').textContent = `Loaded ${addersList.length} adders.`;
+        const slider = $('.adderPoolSlider');
+        slider.disabled = addersList.length === 0;
+        slider.max = addersList.length || 1;
+        slider.value = addersList.length || 1;
+        $('.adderPoolValue').textContent = addersList.length > 0 ? addersList.length : 'All';
+      };
+      r.readAsText(f);
+    };
+    $('.adderPoolSlider').oninput = e => { $('.adderPoolValue').textContent = e.target.value; };
+    root.querySelectorAll('.pane[data-pane="adders"] input[type="checkbox"]').forEach(cb => {
+      cb.onchange = e => {
+        const k = e.target.className.replace('adderFor', '').toLowerCase();
+        if (adderConfig.hasOwnProperty(k)) adderConfig[k] = e.target.checked;
+      };
+    });
+
+    /* AutoBeefer Engine */
+    $('.fileLoader').onchange = e => {
+      const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+      r.onload = ev => {
+        beeferSentences = ev.target.result.split(/\r?\n/).filter(Boolean);
+        $('.loadedWords').textContent = `Loaded: ${beeferSentences.length}`;
+        const lim = $('.sentenceLimitSlider');
+        lim.disabled = beeferSentences.length === 0;
+        lim.max = beeferSentences.length || 1;
+        lim.value = beeferSentences.length || 1;
+        $('.sentenceLimitValue').textContent = beeferSentences.length > 0 ? beeferSentences.length : 'All';
+      };
+      r.readAsText(f);
+    };
+    $('.delaySlider').oninput = e => { beeferDelay = parseFloat(e.target.value); $('.delayValue').textContent = beeferDelay.toFixed(2); };
+    $('.accuracySlider').oninput = e => { $('.accuracyValue').textContent = e.target.value; };
+    $('.sentenceLimitSlider').oninput = e => { $('.sentenceLimitValue').textContent = e.target.value; };
+
+    function mutateAccuracy(text, acc) {
+      if (acc === 100) return text;
+      const rate = (100 - acc) / 100;
+      const chars = "abcdefghijklmnopqrstuvwxyz";
+      let words = text.split(' ');
+      for (let i = 0; i < words.length; i++) {
+        if (Math.random() < rate * 0.5) {
+          let w = words[i].split('');
+          if (w.length > 2) w[0] = chars[Math.floor(Math.random() * chars.length)];
+          words[i] = w.join('');
+        }
+      }
+      return words.join(' ');
+    }
+
+    $('.startSending').onclick = () => {
+      initAudio();
+      if (!targetChannelId || beeferRunning || beeferSentences.length === 0) return;
+      beeferRunning = true; $('.startSending').disabled = true; $('.stopSending').disabled = false;
+      let idx = 0;
+      const limit = parseInt($('.sentenceLimitSlider').value, 10);
+      const activeSentences = beeferSentences.slice(0, limit);
+      const tick = () => {
+        if (!beeferRunning || rateLimited) return;
+        if (idx >= activeSentences.length) idx = 0;
+        processAndQueue(activeSentences[idx++], 'autobeefer');
+        beeferTimer = setTimeout(tick, beeferDelay * 1000);
+      };
+      tick();
+    };
+    $('.stopSending').onclick = () => {
+      beeferRunning = false; clearTimeout(beeferTimer);
+      $('.startSending').disabled = false; $('.stopSending').disabled = true;
+    };
+
+    /* Additional Controls */
+    $('.enableAutoReact').onchange = e => { autoReact = e.target.checked; };
+    $('.typingIndicators').onchange = e => { typingInd = e.target.checked; };
+    $('.smartRateHandling').onchange = e => { smartRate = e.target.checked; };
+    $('.invertEnter').onchange = e => { invertEnterKey = e.target.checked; };
+    $('.autobeefer-punctuation').onchange = e => { beeferPunct = e.target.checked; };
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    spawnTokenSystem('tempo_alpha', 'Vessel Alpha (Prime)');
+    spawnTokenSystem('tempo_beta', 'Vessel Beta (Support)');
+  });
+</script>
+</body>
+</html>
